@@ -1,0 +1,24 @@
+name: Windows driver source build
+
+on:
+  push:
+    branches: [main]
+    paths: ['windows_kext/**', 'Earthfile', '.github/workflows/kext.yml']
+  pull_request:
+    paths: ['windows_kext/**', 'Earthfile', '.github/workflows/kext.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: earthly/actions-setup@43211c7a0eae5344d6d79fb4aaf209c8f8866203 # v1
+        with:
+          version: v0.8.0
+      - run: earthly --ci +kext-ci

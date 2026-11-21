@@ -1,0 +1,37 @@
+name: Agent checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    env:
+      CGO_ENABLED: "0"
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: go.mod
+      - run: go mod verify
+      - run: go test -short ./...
+      - run: go vet ./...
+      - name: Verify the Go and Rust driver protocol
+        run: sh windows_kext/test_protocol.sh
+      - name: Compile Linux and Windows cores
+        run: |
+          go generate ./cmds/packettale-core
+          for os in linux windows; do
+            for arch in amd64 arm64; do
+              GOOS="$os" GOARCH="$arch" go build -trimpath -o "${RUNNER_TEMP}/$os-$arch/" ./cmds/packettale-core
+            done
+          done

@@ -1,0 +1,82 @@
+# Compiled binaries
+*.exe
+dist/
+
+# Dist dir
+dist
+packaging/_precompiled/
+
+# Custom dev deops
+go.mod.*
+
+# vendor dir
+vendor
+
+# Local test databases and generated output. Keep the protocol test fixtures.
+testdata/
+!windows_kext/kextinterface/testdata/
+windows_kext/kextinterface/testdata/*
+!windows_kext/kextinterface/testdata/rust_info_test.bin
+!windows_kext/protocol/testdata/
+windows_kext/protocol/testdata/*
+!windows_kext/protocol/testdata/go_command_test.bin
+
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.a
+*.so
+*.syso
+
+# Folders
+_obj
+_test
+
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
+
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+_testmain.go
+
+*.exe
+*.test
+*.prof
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# OS specifics
+.DS_Store
+
+# Custom dev scripts
+win_dev_*
+go.work
+go.work.sum
+
+# Kext releases
+windows_kext/release/kext_release_*.zip
+windows_core_dll/.vs/windows_core_dll
+
+#windows_core_dll
+windows_core_dll/x64/
+windows_core_dll/packettale-core/x64/
+
+windows_kext/test/_testcert/
+windows_kext/test/_out/
+windows_kext/test/_delme/
+
+# Local tooling and credentials
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.codex/
+.claude/

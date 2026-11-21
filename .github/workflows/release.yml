@@ -1,0 +1,41 @@
+name: Build installers
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-core-dll:
+    uses: ./.github/workflows/windows-dll.yml
+
+  installers:
+    needs: windows-core-dll
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: earthly/actions-setup@43211c7a0eae5344d6d79fb4aaf209c8f8866203 # v1
+        with:
+          version: v0.8.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: packettale-core-dll
+          path: windows_core_dll/x64/Release
+      - name: Prepare payload and build Linux packages
+        run: earthly +all-artifacts
+      - name: Build Windows installer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends nsis
+          makensis -NOCD "-DINPUT=$PWD/dist/payload" "-DOUTPUT=$PWD/dist/packettale-windows-amd64.exe" -DVERSION=1.0.0 packaging/windows/packettale.nsi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: packettale-installer-builds
+          path: |
+            dist/linux_amd64/packettale.deb
+            dist/linux_amd64/packettale.rpm
+            dist/packettale-windows-amd64.exe
+          if-no-files-found: error

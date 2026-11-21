@@ -1,0 +1,29 @@
+name: Windows core DLL
+
+on:
+  workflow_call:
+  push:
+    branches: [main]
+    paths: ['windows_core_dll/**', '.github/workflows/windows-dll.yml']
+  pull_request:
+    paths: ['windows_core_dll/**', '.github/workflows/windows-dll.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
+      - name: Build DLL
+        run: msbuild windows_core_dll/windows_core_dll.sln -t:Rebuild -p:Configuration=Release -p:Platform=x64
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: packettale-core-dll
+          path: windows_core_dll/x64/Release/packettale-core.dll
+          if-no-files-found: error

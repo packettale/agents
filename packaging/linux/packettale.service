@@ -1,0 +1,39 @@
+[Unit]
+Description=PacketTale Agent
+Before=nss-lookup.target network.target shutdown.target
+After=systemd-networkd.service
+Conflicts=shutdown.target
+Wants=nss-lookup.target
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=10
+RestartPreventExitStatus=24
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+MemoryLow=2G
+NoNewPrivileges=yes
+PrivateTmp=yes
+PIDFile=/var/lib/packettale/core-lock.pid
+Environment=LOGLEVEL=info
+Environment=PACKETTALE_ARGS=
+EnvironmentFile=-/etc/default/packettale
+ProtectSystem=true
+ReadWritePaths=/usr/lib/packettale
+RestrictAddressFamilies=AF_UNIX AF_NETLINK AF_INET AF_INET6
+RestrictNamespaces=yes
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+PrivateDevices=yes
+AmbientCapabilities=cap_chown cap_kill cap_net_admin cap_net_bind_service cap_net_broadcast cap_net_raw cap_sys_module cap_sys_ptrace cap_dac_override cap_fowner cap_fsetid cap_sys_resource cap_bpf cap_perfmon
+CapabilityBoundingSet=cap_chown cap_kill cap_net_admin cap_net_bind_service cap_net_broadcast cap_net_raw cap_sys_module cap_sys_ptrace cap_dac_override cap_fowner cap_fsetid cap_sys_resource cap_bpf cap_perfmon
+StateDirectory=packettale
+WorkingDirectory=/var/lib/packettale
+ExecStart=/usr/lib/packettale/packettale-core --log-dir=/var/lib/packettale/log -- $PACKETTALE_ARGS
+ExecStopPost=-/usr/lib/packettale/packettale-core --recover-iptables
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Gather build metadata.
+VERSION="$(git tag --points-at)" || true
+test -z "$VERSION" && DEV_VERSION="$(git describe --tags --first-parent --abbrev=0)" || true
+test -n "$DEV_VERSION" && VERSION="${DEV_VERSION}_dev_build"
+test -z "$VERSION" && VERSION="dev_build"
+SOURCE="https://github.com/packettale/agents"
+BUILD_TIME=$(date -u "+%Y-%m-%dT%H:%M:%SZ" || echo "unknown")
+
+# Build
+go generate .
+export CGO_ENABLED=0
+go build -trimpath -ldflags "-X github.com/packettale/agents/base/info.version=${VERSION} -X github.com/packettale/agents/base/info.buildSource=${SOURCE} -X github.com/packettale/agents/base/info.buildTime=${BUILD_TIME}" "$@"
