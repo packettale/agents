@@ -5,56 +5,49 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
-
-	"github.com/tevino/abool"
 )
 
 func TestOnceAgain(t *testing.T) {
 	t.Parallel()
 
-	oa := OnceAgain{}
-	executed := abool.New()
-	var testWg sync.WaitGroup
+	const callers = 100
+	var once OnceAgain
+	var executions atomic.Int32
 
-	// One execution should gobble up the whole batch.
-	for range 10 {
-		testWg.Add(100)
-		for range 100 {
-			go func() {
-				oa.Do(func() {
-					if !executed.SetToIf(false, true) {
-						t.Errorf("concurrent execution!")
-					}
-					time.Sleep(10 * time.Millisecond)
-				})
-				testWg.Done()
-			}()
-		}
-		testWg.Wait()
-		executed.UnSet() // reset check
-	}
+	for batch := range 10 {
+		var callersDone sync.WaitGroup
+		entered := make(chan struct{})
+		release := make(chan struct{})
 
-	// Continuous use with re-execution.
-	// Choose values so that about 10 executions are expected
-	var execs uint32
-	testWg.Add(100)
-	for range 100 {
-		go func() {
-			oa.Do(func() {
-				atomic.AddUint32(&execs, 1)
-				time.Sleep(10 * time.Millisecond)
+		callersDone.Go(func() {
+			once.Do(func() {
+				executions.Add(1)
+				close(entered)
+				<-release
 			})
-			testWg.Done()
-		}()
+		})
+		<-entered
 
-		time.Sleep(1 * time.Millisecond)
-	}
+		for range callers - 1 {
+			callersDone.Go(func() {
+				once.Do(func() { executions.Add(1) })
+			})
+		}
 
-	testWg.Wait()
-	if execs <= 8 {
-		t.Errorf("unexpected low exec count: %d", execs)
-	}
-	if execs >= 12 {
-		t.Errorf("unexpected high exec count: %d", execs)
+		// Let this execution finish once all callers have joined the same batch.
+		deadline := time.Now().Add(5 * time.Second)
+		for atomic.LoadInt32(&once.waiters) < callers && time.Now().Before(deadline) {
+			time.Sleep(time.Millisecond)
+		}
+		joined := atomic.LoadInt32(&once.waiters)
+		close(release)
+		callersDone.Wait()
+
+		if joined != callers {
+			t.Fatalf("batch %d: got %d callers, want %d", batch+1, joined, callers)
+		}
+		if got, want := executions.Load(), int32(batch+1); got != want {
+			t.Fatalf("batch %d: got %d executions, want %d", batch+1, got, want)
+		}
 	}
 }
