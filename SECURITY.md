@@ -1,7 +1,6 @@
 # Security
 
-Report suspected vulnerabilities through
-[GitHub private vulnerability reporting](https://github.com/packettale/agents/security/advisories/new).
+Report suspected vulnerabilities by [emailing PacketTale privately](mailto:hello@packettale.com?subject=Security%20report).
 
 Include the affected agent version and platform, the expected and observed
 behaviour, and enough detail to reproduce the issue in a test environment.
